@@ -10,5 +10,5 @@ Running this C++ code gives the outcome of a Baccarat game using a standard
 random number generation library from C++. The outcome is printed in the 
 following format:
 
-PHand - BHand - Outcome
+PHand - BHand - Outcome  
 7,8,J - 3,3 - BANKER
