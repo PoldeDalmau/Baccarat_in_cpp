@@ -76,6 +76,10 @@ class Participant{
         return dval % 10;
     }
 
+    int getLastcardvalue()const{
+        return playerDeck[playerDeck.size()].getFacevalue();
+    }
+
     int getNumcards()const{
         return num_cards;
     }
@@ -96,10 +100,31 @@ class Banker : public Participant
     public:
 
     bool isNextturnbanker(const Player player_) const{
-        if(player_.getNumcards() < 3){
+        if(player_.getNumcards() < 3){ // If the player stood, the banker draws according to the same rules as the player.
             return isNextturnplayer(player_.getDeckvalue());
         }
-        else{return 0;}
+        else{
+            int this_dval = getDeckvalue();
+            bool b1, b2, b3, b4, b5;
+            int player_3rdcard = player_.getLastcardvalue();
+            // If the banker total is 2 or less, they draw a third card, regardless of what the player's third card is.
+            b1 = this_dval<3;
+            // If the banker total is 3, they draw a third card unless the player's third card is an 8.
+            b2 = this_dval==3 && player_3rdcard != 8;
+            // If the banker total is 4, they draw a third card if the player's third card is 2, 3, 4, 5, 6, 7.
+            b3 = this_dval == 4 && 1 < player_3rdcard < 8;
+            // If the banker total is 5, they draw a third card if the player's third card is 4, 5, 6, or 7.
+            b4 = this_dval == 5 && 3 < player_3rdcard < 8;
+            // If the banker total is 6, they draw a third card if the player's third card is a 6 or 7.
+            b5 = this_dval == 6 && 5 < player_3rdcard < 8;
+            if(b1 || b2 || b3 || b4 || b5){
+                return 1;
+            }
+            // If the banker total is 7, they stand.
+            else{
+                return 0;
+            }
+        }
     }
 };
 
@@ -138,58 +163,90 @@ void printFinalscore(Player p_, Banker b_){
     std::cout<< all_cards + outcome<<std::endl;
 }
 
-int main(){
-    // RNG for shuffeling cards.
-    srand(time(0)); 
-    int face_number[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
-    std::string symbol[]{"Hearts", "Diamonds", "Spades", "Clubs"};
+int getFinalscore(Player p__, Banker b__){
+    int p__dval = p__.getDeckvalue();
+    int b_dval = b__.getDeckvalue();
+    if(p__dval > b_dval){
+        return 0; // player win
+    }
+    if(p__dval == b_dval){
+        return 2; // banker win
+    }
+    if (p__dval < b_dval){
+        return 1; // tie
+    }
+    return -1;
+}
 
-    // Shuffled deck initialization:
-    int i, j, k, l;
-    l=0;
-    for(i=0;i<4;i++){
-        for(j=0;j<13;j++){
-            for(k=0;k<num_decks;k++){
-                deck[l].setCard(face_number[j], symbol[i]); // This line and the one below into one line with the getmethod!!!
-                l++;
+int main(){
+    double player_win, banker_win, tie = 0; // counters
+    int num_games = 10000000;
+    // RNG for shuffeling cards.
+    // srand(time(0)); 
+    for(int i_game = 0; i_game < num_games; i_game++){
+        srand(i_game);
+        int face_number[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
+        std::string symbol[]{"Hearts", "Diamonds", "Spades", "Clubs"};
+
+        // Shuffled deck initialization:
+        int i, j, k, l;
+        l=0;
+        for(i=0;i<4;i++){
+            for(j=0;j<13;j++){
+                for(k=0;k<num_decks;k++){
+                    deck[l].setCard(face_number[j], symbol[i]); // This line and the one below into one line with the getmethod!!!
+                    l++;
+                }
             }
         }
+        // std::cout<<"before"<<endl;
+        // printDeck();
+        shuffle();
+        // std::cout<<"after"<<endl;
+        // printDeck();
+
+        Player p;
+        Banker b;
+        
+        // Shuffled cards are given to player and banker following the right order.
+        // From wikipedia: The dealer burns the first card face up and then based on its respective
+        // numerical value, with aces worth 1 and face cards worth 10, the dealer burns that many cards face down.
+        
+        int num_burns = deck[0].firstBurn() + 1;
+        // // std::cout<<"Burned card:"<<std::endl;
+        // deck[0].printCard();
+        p.addCard(deck[num_burns]);
+        b.addCard(deck[num_burns++]);
+        p.addCard(deck[num_burns++]);
+        b.addCard(deck[num_burns++]);
+        // std::cout<<"\n\nPlayer cards:"<<std::endl;
+        // p.printDeck();
+        // std::cout<<"\nBanker cards:"<<std::endl;
+        // b.printDeck();
+        // std::cout<<std::endl;
+        // std::cout<<"\nInitial player deck value: "<<p.getDeckvalue()<<std::endl;
+        // std::cout<<"Initial banker deck value: "<<b.getDeckvalue()<<std::endl;
+
+        // std::cout<<p.isNextturnplayer(b.getDeckvalue())<<std::endl;
+
+        // Conditions for participants to pick a third card:
+        if(p.isNextturnplayer(b.getDeckvalue())){
+            p.addCard(deck[num_burns++]);
+        }
+        if(b.isNextturnbanker(p)){
+            b.addCard(deck[num_burns++]);
+        }
+
+        // std::cout<<"\nFinal player deck value: "<<p.getDeckvalue()<<std::endl;
+        // std::cout<<"Final banker deck value: "<<b.getDeckvalue()<<std::endl;
+        // printFinalscore(p, b);
+        if(getFinalscore(p, b) == 0){player_win += 1;}
+        if(getFinalscore(p, b) == 1){banker_win += 1;}
+        if(getFinalscore(p, b) == 2){tie += 1;}
+        // std::cout << getFinalscore(p, b)<<std::endl;
     }
-    // std::cout<<"before"<<endl;
-    // printDeck();
-    shuffle();
-    // std::cout<<"after"<<endl;
-    // printDeck();
-
-    Player p;
-    Banker b;
-    
-    // Shuffled cards are given to player and banker following the right order.
-    // From wikipedia: The dealer burns the first card face up and then based on its respective
-    // numerical value, with aces worth 1 and face cards worth 10, the dealer burns that many cards face down.
-    
-    int num_burns = deck[0].firstBurn();
-    // // std::cout<<"Burned card:"<<std::endl;
-    // deck[0].printCard();
-    p.addCard(deck[num_burns]);
-    b.addCard(deck[num_burns++]);
-    p.addCard(deck[num_burns++]);
-    b.addCard(deck[num_burns++]);
-    // std::cout<<"\n\nPlayer cards:"<<std::endl;
-    // p.printDeck();
-    // std::cout<<"\nBanker cards:"<<std::endl;
-    // b.printDeck();
-    // std::cout<<std::endl;
-    std::cout<<"\nInitial player deck value: "<<p.getDeckvalue()<<std::endl;
-    std::cout<<"Initial banker deck value: "<<b.getDeckvalue()<<std::endl;
-
-    std::cout<<p.isNextturnplayer(b.getDeckvalue())<<std::endl;
-
-    if(p.isNextturnplayer(b.getDeckvalue())){p.addCard(deck[num_burns++]);}
-    if(b.isNextturnbanker(p)){b.addCard(deck[num_burns++]);}
-
-    std::cout<<"\nFinal player deck value: "<<p.getDeckvalue()<<std::endl;
-    std::cout<<"Final banker deck value: "<<b.getDeckvalue()<<std::endl;
-    printFinalscore(p, b);
+    std::cout<<"B:"<<banker_win/(player_win + banker_win + tie) * 100.0<<std::endl;
+    std::cout<<"P:"<<player_win/(player_win + banker_win + tie) * 100.0<<std::endl;
+    std::cout<<"T:"<<tie/(player_win + banker_win + tie) * 100.0<<std::endl;
     return 0;
 }
