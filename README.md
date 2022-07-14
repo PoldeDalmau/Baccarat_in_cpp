@@ -19,7 +19,7 @@
  Player: 44.6%  
  Tie: 9.6%
 
- Measured win distribution for 1 million games:
+ Measured win distribution for 1 million games:  
  Banker: 45.4941  
  Player: 44.9487  
  Tie:    9.5572  
