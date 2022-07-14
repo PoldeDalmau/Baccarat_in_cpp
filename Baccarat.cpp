@@ -3,9 +3,6 @@
 #include<ctime>
 #include<string>
 
-// class Player;
-// class Banker;
-
 class Card{
 
     private:
@@ -84,39 +81,74 @@ class Participant{
         return num_cards;
     }
 
+};
+
+class Player : public Participant{
+    public:
+    
     bool isNextturnplayer(const int b_dval) const{
+        /* If neither the player nor the banker is dealt 
+        a total of 8 or 9 in the first two cards (known as
+        a "natural"), the tableau is consulted, first for 
+        the player's rules, then the banker's.
+        If the player has an initial total of 5 or less, 
+        they draw a third card. If the player has an initial
+        total of 6 or 7, they stand. Of course this doesn't 
+        happen if the bankhas a "natural". In that case, the 
+        player stands. */
         int p_dval = getDeckvalue();
-        if (p_dval < 6 && b_dval < 8){ // excludes the "natural" and only returns true if 
+        if (p_dval < 6 && b_dval < 8){  
             return true;
         }
         else{return false;}
     }
 };
 
-class Player : public Participant{};
-
 class Banker : public Participant
 {
     public:
 
     bool isNextturnbanker(const Player player_) const{
-        if(player_.getNumcards() < 3){ // If the player stood, the banker draws according to the same rules as the player.
-            return isNextturnplayer(player_.getDeckvalue());
+        int this_dval = getDeckvalue();
+        if(player_.getNumcards() < 3){
+            if(this_dval < 6 && player_.getDeckvalue() < 8){
+                return 1;
+            }
+            else{return 0;}
         }
+        // Conditions from different source:
+        // b1: If Player drew a 2 or 3, Banker draws with 0-4 and stands with 5-7.
+        // b2: If Player drew a 4 or 5, Banker draws with 0-5 and stands with 6-7.
+        // b3: If Player drew a 6 or 7, Banker draws with 0-6 and stands with 7.
+        // b4: If Player drew an 8, Banker draws with 0-2 and stands with 3-7.
+        // b5: If Player drew an ace, 9, 10, or face-card, the Banker draws with 0-3 and stands with 4-7.
+        // else{
+        //     bool b1, b2, b3, b4, b5;
+        //     int player_3rdcard = player_.getLastcardvalue();
+        //     b1 = (player_3rdcard == 2 || player_3rdcard == 3) && this_dval < 5;
+        //     b2 = (player_3rdcard == 4 || player_3rdcard == 5) && this_dval < 6;
+        //     b3 = (player_3rdcard == 6 || player_3rdcard == 7) && this_dval < 7;
+        //     b4 = player_3rdcard == 8 && this_dval < 3;
+        //     b5 = (player_3rdcard == 1 || player_3rdcard > 8) && this_dval < 4;
+           
+        //     if(b1 || b2 || b3 || b4 || b5){
+        //         return 1;
+        //     }
+
+        // Conditions how I understood them from wikipedia:
+        // If the banker total is 2 or less, they draw a third card, regardless of what the player's third card is.
+        // If the banker total is 3, they draw a third card unless the player's third card is an 8.
+        // If the banker total is 5, they draw a third card if the player's third card is 4, 5, 6, or 7.
+        // If the banker total is 4, they draw a third card if the player's third card is 2, 3, 4, 5, 6, 7.
+        // If the banker total is 6, they draw a third card if the player's third card is a 6 or 7.
         else{
-            int this_dval = getDeckvalue();
             bool b1, b2, b3, b4, b5;
             int player_3rdcard = player_.getLastcardvalue();
-            // If the banker total is 2 or less, they draw a third card, regardless of what the player's third card is.
             b1 = this_dval<3;
-            // If the banker total is 3, they draw a third card unless the player's third card is an 8.
             b2 = this_dval==3 && player_3rdcard != 8;
-            // If the banker total is 4, they draw a third card if the player's third card is 2, 3, 4, 5, 6, 7.
-            b3 = this_dval == 4 && 1 < player_3rdcard < 8;
-            // If the banker total is 5, they draw a third card if the player's third card is 4, 5, 6, or 7.
-            b4 = this_dval == 5 && 3 < player_3rdcard < 8;
-            // If the banker total is 6, they draw a third card if the player's third card is a 6 or 7.
-            b5 = this_dval == 6 && 5 < player_3rdcard < 8;
+            b3 = this_dval == 4 && 1 < player_3rdcard && player_3rdcard < 8;
+            b4 = this_dval == 5 && 3 < player_3rdcard && player_3rdcard < 8;
+            b5 = this_dval == 6 && 5 < player_3rdcard && player_3rdcard < 8;
             if(b1 || b2 || b3 || b4 || b5){
                 return 1;
             }
@@ -175,16 +207,17 @@ int getFinalscore(Player p__, Banker b__){
     if (p__dval < b_dval){
         return 1; // tie
     }
-    return -1;
+    else{return -1;} // This line avoids the compiler to think it might be a void.
 }
 
 int main(){
     double player_win, banker_win, tie = 0; // counters
-    int num_games = 10000000;
+    int num_games = 1;
     // RNG for shuffeling cards.
     // srand(time(0)); 
+    int time_now = time(0);
     for(int i_game = 0; i_game < num_games; i_game++){
-        srand(i_game);
+        srand(i_game + time_now);
         int face_number[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
         std::string symbol[]{"Hearts", "Diamonds", "Spades", "Clubs"};
 
@@ -199,11 +232,7 @@ int main(){
                 }
             }
         }
-        // std::cout<<"before"<<endl;
-        // printDeck();
         shuffle();
-        // std::cout<<"after"<<endl;
-        // printDeck();
 
         Player p;
         Banker b;
@@ -215,7 +244,7 @@ int main(){
         int num_burns = deck[0].firstBurn() + 1;
         // // std::cout<<"Burned card:"<<std::endl;
         // deck[0].printCard();
-        p.addCard(deck[num_burns]);
+        p.addCard(deck[num_burns++]);
         b.addCard(deck[num_burns++]);
         p.addCard(deck[num_burns++]);
         b.addCard(deck[num_burns++]);
@@ -237,16 +266,16 @@ int main(){
             b.addCard(deck[num_burns++]);
         }
 
-        // std::cout<<"\nFinal player deck value: "<<p.getDeckvalue()<<std::endl;
+        // std::cout<<"Final player deck value: "<<p.getDeckvalue()<<std::endl;
         // std::cout<<"Final banker deck value: "<<b.getDeckvalue()<<std::endl;
-        // printFinalscore(p, b);
-        if(getFinalscore(p, b) == 0){player_win += 1;}
-        if(getFinalscore(p, b) == 1){banker_win += 1;}
-        if(getFinalscore(p, b) == 2){tie += 1;}
+        printFinalscore(p, b);
+        // if(getFinlalscore(p, b) == 0){player_win += 1;}
+        // if(getFinalscore(p, b) == 1){banker_win += 1;}
+        // if(getFinascore(p, b) == 2){tie += 1;}
         // std::cout << getFinalscore(p, b)<<std::endl;
     }
-    std::cout<<"B:"<<banker_win/(player_win + banker_win + tie) * 100.0<<std::endl;
-    std::cout<<"P:"<<player_win/(player_win + banker_win + tie) * 100.0<<std::endl;
-    std::cout<<"T:"<<tie/(player_win + banker_win + tie) * 100.0<<std::endl;
+    std::cout<<"Banker: "<<banker_win/(player_win + banker_win + tie) * 100.0<<std::endl;
+    std::cout<<"Player: "<<player_win/(player_win + banker_win + tie) * 100.0<<std::endl;
+    std::cout<<"Tie:    "<<tie/(player_win + banker_win + tie) * 100.0<<std::endl;
     return 0;
 }

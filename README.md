@@ -1,5 +1,5 @@
 # Baccarat_in_cpp
- A small script that runs one Baccarat game.
+ A small script that runs Baccarat (punto banco) games.
 
 ## Game description
 
@@ -19,11 +19,11 @@
  Player: 44.6%  
  Tie: 9.6%
 
- Measured win distribution:
- Banker: 43.7692  
- Player: 45.3538  
- Tie: 10.877  
-## How to use this code:
+ Measured win distribution for 1 million games:
+ Banker: 45.4941
+ Player: 44.9487
+ Tie:    9.5572
+## Usage:
  Running this C++ code gives the outcome of a Baccarat game using a standard
  random number generation library from C++. The outcome is printed in the
  following format:
