@@ -17,12 +17,12 @@
  Expected win distribution(Google):  
  Banker: 45.8%  
  Player: 44.6%  
- Tie: 9.6%
+ Tie:    9.6%
 
  Measured win distribution for 1 million games:  
- Banker: 45.4941  
- Player: 44.9487  
- Tie:    9.5572  
+ Banker: 45.4941%  
+ Player: 44.9487%  
+ Tie:    9.5572%  
 ## Usage:
  Running this C++ code gives the outcome of a Baccarat game using a standard
  random number generation library from C++. The outcome is printed in the
